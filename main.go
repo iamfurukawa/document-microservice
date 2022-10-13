@@ -17,9 +17,21 @@ func authenticate(token string) bool {
 	fmt.Printf("m=authenticate stage=init token=%s\n", token)
 
 	client := &http.Client{}
-	req, _ := http.NewRequest("POST", "http://localhost:6660/validate", nil)
+	req, err := http.NewRequest("POST", "http://oauth2-server:6660/validate", nil)
+
+	if err != nil {
+		fmt.Printf("m=authenticate stage=end failed to create request\n")
+		return false
+	}
+
 	req.Header.Add("Authorization", token)
-	res, _ := client.Do(req)
+	res, err := client.Do(req)
+
+	if err != nil {
+		fmt.Printf("m=authenticate stage=end failed to make request\n")
+		fmt.Println(err)
+		return false
+	}
 
 	isAuthenticate := res.StatusCode == http.StatusNoContent
 
@@ -133,6 +145,6 @@ func validateDocument(w http.ResponseWriter, r *http.Request) {
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/document/{document}", validateDocument)
-	fmt.Printf("Server starting...\n")
+	fmt.Printf("Server started...\n")
 	log.Fatal(http.ListenAndServe(":6661", router))
 }
